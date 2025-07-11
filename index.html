@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Warburtons Production Line Dashboard</title>
+  <meta http-equiv="refresh" content="300"> <!-- auto-refresh every 5 minutes -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: #fff3e0;
+      color: #e65100;
+      text-align: center;
+    }
+    header {
+      background-color: #ff6f00;
+      padding: 1em 0;
+      font-size: 2.5em;
+      font-weight: bold;
+      color: white;
+    }
+    .stats {
+      margin: 2em auto;
+      font-size: 1.8em;
+      max-width: 600px;
+      background: #fff8e1;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      padding: 1em;
+    }
+    .clock {
+      font-size: 1.3em;
+      margin-top: 1em;
+      color: #bf360c;
+    }
+    .marquee {
+      position: fixed;
+      bottom: 0;
+      background: #e65100;
+      color: white;
+      width: 100%;
+      padding: 0.5em 0;
+      font-size: 1.2em;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .marquee span {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scroll 20s linear infinite;
+    }
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+  </style>
+</head>
+<body>
+  <header>Warburtons - Oven A Production Line</header>
+
+  <div class="stats">
+    <p>🍞 Loaves Baked Today: <strong id="loaves"></strong></p>
+    <p>🥖 Baguettes Packaged: <strong id="baguettes"></strong></p>
+    <p>🥐 Croissants per Hour: <strong id="croissants"></strong></p>
+    <p>🛠️ Last Safety Incident: <strong>Tobi</strong></p>
+    <div class="clock" id="clock"></div>
+  </div>
+
+  <div class="marquee"><span>⚠️ SAFETY FIRST: Gloves must be worn at all times | 🧼 Clean-down scheduled for 16:00 | 🚨 Daily machine test at 14:00 | 💡 Last safety incident recorded by: Tobi</span></div>
+
+  <script>
+    // Simulated factory data
+    function generateFakeData() {
+      document.getElementById("loaves").textContent = 1200 + Math.floor(Math.random() * 300);
+      document.getElementById("baguettes").textContent = 300 + Math.floor(Math.random() * 150);
+      document.getElementById("croissants").textContent = 85 + Math.floor(Math.random() * 20);
+    }
+
+    // Live clock
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      document.getElementById("clock").textContent = "Current Time: " + timeStr;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+    generateFakeData();
+  </script>
+</body>
+</html>
