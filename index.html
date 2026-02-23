@@ -87,7 +87,7 @@
     }
     .subtitle .tag{
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 800;
       color: rgba(0,0,0,.64);
       white-space:nowrap;
     }
@@ -123,10 +123,6 @@
     .dot.warn{
       background:#f59e0b;
       box-shadow: 0 0 0 4px rgba(245,158,11,.16);
-    }
-    .dot.bad{
-      background:#ef4444;
-      box-shadow: 0 0 0 4px rgba(239,68,68,.16);
     }
 
     /* Main content area */
@@ -319,14 +315,13 @@
       100%{ transform: translateX(-100%); }
     }
 
-    /* “Signage” readability tweaks */
+    /* Readability tweaks */
     @media (max-width: 1100px){
       .big{ font-size: 48px; }
       .subtitle .line{ font-size: 18px; }
       .wordmark{ font-size: 22px; }
     }
 
-    /* If someone opens it on 1024x768, keep it usable */
     @media (max-width: 1024px){
       .grid, .comms{ gap: 14px; }
       .wrap{ padding: 0 14px 70px 14px; }
@@ -341,7 +336,6 @@
   <div class="topbar">
     <div class="brand">
       <div class="wordmark" aria-label="Warburtons">
-        <!-- tiny wheat icon (inline SVG) -->
         <svg class="wheat" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 3c2.6 1.4 4.4 3.6 4.4 6.3 0 1.9-.9 3.5-2.2 4.9" stroke="white" stroke-width="2" stroke-linecap="round"/>
           <path d="M12 3c-2.6 1.4-4.4 3.6-4.4 6.3 0 1.9.9 3.5 2.2 4.9" stroke="white" stroke-width="2" stroke-linecap="round"/>
@@ -352,7 +346,7 @@
       </div>
       <div class="subtitle">
         <div class="line">Production Floor – Oven “A”</div>
-        <div class="tag">Bakers since 1876 • Digital Signage (demo)</div>
+        <div class="tag">Bakers since 1876 • 150 Years in the Baking • Digital Signage (demo)</div>
       </div>
     </div>
 
@@ -388,7 +382,7 @@
             <span class="mini">Area: <span id="incidentArea">Packing</span></span>
           </div>
           <div class="progress"><div class="bar" id="safetyBar" style="background: linear-gradient(90deg,var(--wb-blue),#5aa0ff)"></div></div>
-          <div class="trend"><span>Safety message</span><span><span class="mini">Gloves • Guards • Good housekeeping</span></span></div>
+          <div class="trend"><span>Safety message</span><span><span class="mini">Bakers since 1876 • Safety always</span></span></div>
         </div>
 
         <div class="card span-4">
@@ -402,7 +396,7 @@
         </div>
 
         <div class="card span-4">
-          <div class="label"><span>🥐 Crumpets</span><span class="mini">per hour</span></div>
+          <div class="label"><span>🫓 Crumpets</span><span class="mini">per hour</span></div>
           <div class="big"><span id="crumpets">0</span></div>
           <div class="sub">
             <span class="mini">Temp: <span id="temp">0</span>°C</span>
@@ -453,7 +447,7 @@
           <div class="label"><span>📣 Team comms</span><span class="mini">Today</span></div>
           <div class="big" style="font-size:44px;color:var(--wb-orange-dark);">150 Years in the Baking</div>
           <div class="list">
-            <div class="li">✅ <b>Start-of-shift:</b> line briefing completed • confirm allergen boards updated</div>
+            <div class="li">✅ <b>Bakers since 1876:</b> pride in craft • do it right, do it safely</div>
             <div class="li">🧼 <b>Clean-down:</b> scheduled <span id="cd2">16:00</span> • tools returned to shadow boards</div>
             <div class="li">🚨 <b>Machine test:</b> <span id="mt2">14:00</span> • E-stops and guards check</div>
             <div class="li">📦 <b>Dispatch:</b> prioritise order <span id="priorityOrder">WB-4721</span> • bay 3</div>
@@ -488,22 +482,16 @@
 
   <div class="ticker" role="status" aria-live="polite">
     <div class="inner" id="tickerText">
-      ⚠️ SAFETY FIRST: Gloves must be worn at all times • 🧼 Clean-down scheduled for 16:00 • 🚨 Daily machine test at 14:00 • 🧯 Last safety incident recorded by: Tobi
+      Bakers since 1876 • 150 Years in the Baking • ⚠️ SAFETY FIRST: Gloves must be worn at all times • 🧼 Clean-down scheduled for 16:00 • 🚨 Daily machine test at 14:00
     </div>
   </div>
 
   <script>
-    // -----------------------------
-    // Utilities
-    // -----------------------------
     function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
     function pad2(n){ return String(n).padStart(2, "0"); }
-    function fmtTime(d){
-      return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-    }
+    function fmtTime(d){ return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
     function lerp(a,b,t){ return a + (b-a)*t; }
 
-    // Deterministic-ish RNG (seeded by date)
     function mulberry32(a){
       return function() {
         let t = a += 0x6D2B79F5;
@@ -515,7 +503,6 @@
     function seedFromToday(){
       const d = new Date();
       const key = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-      // Simple hash
       let h = 2166136261;
       for (let i=0;i<key.length;i++){
         h ^= key.charCodeAt(i);
@@ -524,7 +511,6 @@
       return h >>> 0;
     }
 
-    // Smooth number animation
     function animateNumber(el, to, duration=450){
       const from = Number(el.textContent.replace(/[^\d.-]/g,"")) || 0;
       const start = performance.now();
@@ -537,9 +523,6 @@
       requestAnimationFrame(tick);
     }
 
-    // -----------------------------
-    // “Shift” model (simple)
-    // -----------------------------
     const shifts = [
       { name:"Day", start:"06:00", end:"14:00" },
       { name:"Late", start:"14:00", end:"22:00" },
@@ -552,7 +535,6 @@
     }
 
     function inRange(now, start, end){
-      // Handles overnight shifts
       const n = now.getHours()*60 + now.getMinutes();
       const s = start.h*60 + start.m;
       const e = end.h*60 + end.m;
@@ -579,7 +561,6 @@
         total = e - s;
         done = n - s;
       } else {
-        // overnight: total wraps
         total = (24*60 - s) + e;
         done = (n >= s) ? (n - s) : ((24*60 - s) + n);
       }
@@ -587,9 +568,6 @@
       return { pct: total ? (done/total)*100 : 0, remaining: total - done, total };
     }
 
-    // -----------------------------
-    // Fake data model
-    // -----------------------------
     const rng = mulberry32(seedFromToday());
     const state = {
       lineRunning: true,
@@ -619,7 +597,6 @@
     };
 
     function maybeFlipLine(){
-      // Small chance of warning/downtime to make it feel “real”
       const roll = rng();
       if (roll < 0.06){
         state.lineRunning = false;
@@ -628,7 +605,6 @@
         state.lineRunning = true;
         state.downtimeMins = clamp(state.downtimeMins - 1, 0, 60);
       } else {
-        // drift a little
         if (!state.lineRunning) state.downtimeMins = clamp(state.downtimeMins + 1, 0, 60);
       }
     }
@@ -636,15 +612,12 @@
     function updateFakeNumbers(now){
       const sh = currentShift(now);
       const prog = shiftProgress(now, sh);
-
-      // Make “today” values grow with shift progress + small live jitter
       const liveJitter = () => (rng() - 0.5);
 
       const loaves = Math.round(state.loavesBase * (0.45 + prog.pct/100 * 0.75) + liveJitter()*25);
       const bag = Math.round(state.bagBase * (0.35 + prog.pct/100 * 0.85) + liveJitter()*12);
       const crump = Math.round(state.crumpBase + liveJitter()*8);
 
-      // Quality occasionally “warn”
       const qRoll = rng();
       if (qRoll < 0.05){
         state.qStatus = "CHECK";
@@ -656,24 +629,18 @@
         state.labelOk = "OK";
       }
 
-      // OEE components: ensure plausible
       state.avail = clamp(state.avail + Math.round(liveJitter()*2), 75, 98);
       state.perf  = clamp(state.perf  + Math.round(liveJitter()*2), 75, 98);
       state.qual  = clamp(state.qual  + Math.round(liveJitter()*1), 88, 99);
       state.oee = clamp(Math.round((state.avail * state.perf * state.qual) / 10000), 60, 95);
 
-      // Scrap drift
       state.scrap = clamp(state.scrap + liveJitter()*0.15, 0.4, 4.9);
 
-      // Rates
       const loavesRate = state.lineRunning ? clamp(18 + Math.round(liveJitter()*4), 10, 28) : 0;
 
       return { sh, prog, loaves, bag, crump, loavesRate };
     }
 
-    // -----------------------------
-    // DOM wiring
-    // -----------------------------
     const el = (id) => document.getElementById(id);
 
     function updateClock(){
@@ -695,27 +662,22 @@
       updateClock();
 
       maybeFlipLine();
-      const { sh, prog, loaves, bag, crump, loavesRate } = updateFakeNumbers(now);
+      const { prog, loaves, bag, crump, loavesRate } = updateFakeNumbers(now);
 
-      // Status
       const running = state.lineRunning;
       el("lineStatus").textContent = `Line: ${running ? "RUNNING" : "PAUSED"}`;
       el("statusDot").className = "dot " + (running ? "" : "warn");
 
-      // Main numbers (animated)
       animateNumber(el("loaves"), loaves);
       animateNumber(el("baguettes"), bag);
       animateNumber(el("crumpets"), crump);
 
-      // Targets
       el("loavesTarget").textContent = state.loavesTarget.toLocaleString();
       el("bagTarget").textContent = state.bagTarget.toLocaleString();
       el("loavesRate").textContent = loavesRate.toLocaleString();
 
-      // Scrap
       el("scrap").textContent = state.scrap.toFixed(1);
 
-      // Progress bars
       const loafPct = clamp((loaves / state.loavesTarget) * 100, 0, 130);
       el("loavesBar").style.width = `${clamp(loafPct, 0, 100)}%`;
 
@@ -724,56 +686,45 @@
 
       el("crumpBar").style.width = `${clamp((crump / (state.crumpBase + 20)) * 100, 0, 100)}%`;
 
-      // “Yesterday” trend (fake)
       const trend = clamp(-4 + (rng()*12), -9, 14);
       el("loavesTrend").textContent = `${trend >= 0 ? "+" : ""}${trend.toFixed(1)}%`;
       el("loavesTrend").className = trend >= 0 ? "up" : "down";
 
-      // Safety
       el("incidentDays").textContent = state.incidentDays.toLocaleString();
       el("incidentBy").textContent = state.incidentBy;
       el("incidentType").textContent = state.incidentType;
       el("incidentArea").textContent = state.incidentArea;
       el("safetyBar").style.width = `${clamp((state.incidentDays / 90) * 100, 0, 100)}%`;
 
-      // OEE / downtime
       el("oee").textContent = state.oee.toLocaleString();
       el("avail").textContent = state.avail.toLocaleString();
       el("perf").textContent = state.perf.toLocaleString();
       el("qual").textContent = state.qual.toLocaleString();
       el("downtime").textContent = `${state.downtimeMins}m`;
 
-      // Packing rejects
       el("bagRejects").textContent = state.bagRejects.toLocaleString();
 
-      // Process indicators
       el("temp").textContent = state.temp.toLocaleString();
       el("moisture").textContent = state.moisture.toLocaleString();
 
-      // Quality tile
       el("qStatus").textContent = state.qStatus;
       el("qStatus").style.color = (state.qStatus === "PASS") ? "#16a34a" : "#f59e0b";
       el("weight").textContent = state.weight.toLocaleString();
       el("seal").textContent = state.seal;
       el("labelOk").textContent = state.labelOk;
 
-      // Next sample due (fake: next 30-min boundary)
       const mins = now.getMinutes();
       const next = new Date(now);
       next.setMinutes(mins < 30 ? 30 : 60, 0, 0);
       el("nextSample").textContent = fmtTime(next);
 
-      // Shift progress
       el("shiftPct").textContent = Math.round(prog.pct).toLocaleString();
       el("shiftBar").style.width = `${clamp(prog.pct, 0, 100)}%`;
 
-      // Updated timestamp
       el("updated").textContent = `Updated: ${fmtTime(now)}`;
 
-      // Slide 2 values
       el("cd2").textContent = el("cleandown").textContent;
       el("mt2").textContent = el("machinetest").textContent;
-      el("priorityOrder").textContent = state.priorityOrder;
 
       el("sumStatus").textContent = running ? "RUNNING" : "PAUSED";
       el("sumLoaves").textContent = loaves.toLocaleString();
@@ -782,14 +733,10 @@
       el("sumQual").textContent = state.qStatus;
       el("sumIncident").textContent = state.incidentDays.toLocaleString();
 
-      // Ticker: keep it consistent with key times
       el("tickerText").textContent =
-        `⚠️ SAFETY FIRST: Gloves must be worn at all times • 🧼 Clean-down scheduled for ${el("cleandown").textContent} • 🚨 Daily machine test at ${el("machinetest").textContent} • 🧯 Last safety incident recorded by: ${state.incidentBy}`;
+        `Bakers since 1876 • 150 Years in the Baking • ⚠️ SAFETY FIRST: Gloves must be worn at all times • 🧼 Clean-down scheduled for ${el("cleandown").textContent} • 🚨 Daily machine test at ${el("machinetest").textContent} • 🧯 Last safety incident recorded by: ${state.incidentBy}`;
     }
 
-    // -----------------------------
-    // Slide rotation
-    // -----------------------------
     const slides = ["slideKpis", "slideComms"];
     let slideIdx = 0;
 
@@ -798,15 +745,10 @@
       slideIdx = (slideIdx + 1) % slides.length;
     }
 
-    // Initial paint + intervals
     render();
-    setInterval(render, 5000);     // refresh the numbers every 5s
-    setInterval(rotateSlides, 20000); // rotate view every 20s
-    setInterval(updateClock, 1000); // live clock smoothness
+    setInterval(render, 5000);
+    setInterval(rotateSlides, 20000);
+    setInterval(updateClock, 1000);
   </script>
 </body>
 </html>
-
-
-
-
