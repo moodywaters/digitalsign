@@ -1,94 +1,812 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Warburtons Production Line Dashboard</title>
-  <meta http-equiv="refresh" content="300"> <!-- auto-refresh every 5 minutes -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Warburtons Production Floor – Digital Sign</title>
+
+  <!-- Auto-refresh every 5 minutes (optional) -->
+  <meta http-equiv="refresh" content="300">
+
   <style>
-    body {
-      margin: 0;
-      font-family: 'Arial', sans-serif;
-      background-color: #fff3e0;
-      color: #e65100;
-      text-align: center;
+    :root{
+      /* Approx “Warburtons-ish” palette (not official) */
+      --wb-orange: #F36F21;
+      --wb-orange-dark: #D85B12;
+      --wb-cream: #FFF4E6;
+      --wb-ink: #1B1B1B;
+      --wb-blue: #0C4AA3;
+      --wb-blue-dark: #083472;
+      --card: rgba(255,255,255,.78);
+      --card-strong: rgba(255,255,255,.92);
+      --shadow: 0 10px 26px rgba(0,0,0,.12);
+      --shadow-soft: 0 6px 16px rgba(0,0,0,.10);
+      --radius: 18px;
+      --gap: 18px;
     }
-    header {
-      background-color: #ff6f00;
-      padding: 1em 0;
-      font-size: 2.5em;
-      font-weight: bold;
-      color: white;
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(243,111,33,.20), transparent 60%),
+        radial-gradient(900px 500px at 95% 5%, rgba(12,74,163,.18), transparent 55%),
+        linear-gradient(180deg, var(--wb-cream), #fff);
+      color: var(--wb-ink);
+      height:100vh;
+      overflow:hidden;
     }
-    .stats {
-      margin: 2em auto;
-      font-size: 1.8em;
-      max-width: 600px;
-      background: #fff8e1;
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 18px 22px;
+      gap: 18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width: 320px;
+    }
+
+    /* “Warburtons-style” wordmark block (simple, not the actual logo) */
+    .wordmark{
+      background: var(--wb-orange);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      font-size: 26px;
+      box-shadow: var(--shadow-soft);
+      line-height:1;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+    }
+    .wheat{
+      width: 26px;
+      height: 26px;
+      display:inline-block;
+    }
+    .subtitle{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .subtitle .line{
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--wb-orange-dark);
+      white-space:nowrap;
+    }
+    .subtitle .tag{
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(0,0,0,.64);
+      white-space:nowrap;
+    }
+
+    .topmeta{
+      display:flex;
+      align-items:center;
+      gap: 14px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      min-width: 360px;
+    }
+
+    .pill{
+      background: var(--card);
+      border: 1px solid rgba(0,0,0,.06);
+      padding: 10px 14px;
+      border-radius: 999px;
+      box-shadow: var(--shadow-soft);
+      font-weight: 800;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size: 16px;
+    }
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #16a34a;
+      box-shadow: 0 0 0 4px rgba(22,163,74,.16);
+    }
+    .dot.warn{
+      background:#f59e0b;
+      box-shadow: 0 0 0 4px rgba(245,158,11,.16);
+    }
+    .dot.bad{
+      background:#ef4444;
+      box-shadow: 0 0 0 4px rgba(239,68,68,.16);
+    }
+
+    /* Main content area */
+    .wrap{
+      padding: 0 22px 70px 22px; /* leave space for ticker */
+      height: calc(100vh - 80px);
+      display:flex;
+      flex-direction:column;
+      gap: var(--gap);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(120px, 1fr);
+      gap: var(--gap);
+      flex:1;
+      min-height: 0;
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 18px 16px;
+      position:relative;
+      overflow:hidden;
+    }
+    .card.strong{ background: var(--card-strong); }
+
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      background: radial-gradient(600px 160px at 20% 0%, rgba(243,111,33,.22), transparent 55%),
+                  radial-gradient(420px 140px at 95% 10%, rgba(12,74,163,.14), transparent 55%);
+      pointer-events:none;
+      opacity:.7;
+    }
+    .card > *{ position:relative; }
+
+    .label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      color: rgba(0,0,0,.75);
+      font-size: 16px;
+      text-transform: uppercase;
+    }
+
+    .big{
+      margin-top: 14px;
+      font-size: 56px;
+      font-weight: 1000;
+      letter-spacing: -1px;
+      line-height: 1.05;
+      color: var(--wb-orange-dark);
+    }
+
+    .unit{
+      font-size: 18px;
+      font-weight: 900;
+      color: rgba(0,0,0,.55);
+      margin-left: 8px;
+    }
+
+    .sub{
+      margin-top: 10px;
+      font-size: 18px;
+      font-weight: 750;
+      color: rgba(0,0,0,.62);
+      display:flex;
+      gap: 12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .mini{
+      padding: 8px 10px;
       border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      padding: 1em;
+      background: rgba(255,255,255,.65);
+      border: 1px solid rgba(0,0,0,.06);
+      font-size: 14px;
+      font-weight: 850;
     }
-    .clock {
-      font-size: 1.3em;
-      margin-top: 1em;
-      color: #bf360c;
+
+    .progress{
+      margin-top: 14px;
+      height: 16px;
+      background: rgba(0,0,0,.08);
+      border-radius: 999px;
+      overflow:hidden;
+      border: 1px solid rgba(0,0,0,.05);
     }
-    .marquee {
+    .bar{
+      height:100%;
+      width:50%;
+      background: linear-gradient(90deg, var(--wb-orange), #ff9b4d);
+      border-radius: 999px;
+      transition: width .6s ease;
+    }
+
+    .trend{
+      margin-top: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      font-weight: 900;
+      color: rgba(0,0,0,.60);
+    }
+    .trend .up{ color:#16a34a; }
+    .trend .down{ color:#ef4444; }
+
+    /* Layout spans */
+    .span-4{ grid-column: span 4; }
+    .span-5{ grid-column: span 5; }
+    .span-6{ grid-column: span 6; }
+    .span-7{ grid-column: span 7; }
+    .span-8{ grid-column: span 8; }
+    .span-12{ grid-column: span 12; }
+
+    /* Slide system */
+    .slide{
+      display:none;
+      height:100%;
+      min-height: 0;
+    }
+    .slide.active{ display:block; }
+
+    /* Comms / Safety slide */
+    .comms{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: minmax(120px, 1fr);
+      gap: var(--gap);
+      height:100%;
+      min-height: 0;
+    }
+
+    .list{
+      margin-top: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      color: rgba(0,0,0,.72);
+    }
+    .li{
+      background: rgba(255,255,255,.65);
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: 14px;
+      padding: 14px 14px;
+      display:flex;
+      gap: 12px;
+      align-items:flex-start;
+    }
+    .li b{ color: var(--wb-blue); }
+
+    /* Ticker */
+    .ticker{
       position: fixed;
       bottom: 0;
-      background: #e65100;
-      color: white;
-      width: 100%;
-      padding: 0.5em 0;
-      font-size: 1.2em;
+      left:0;
+      right:0;
+      height: 56px;
+      background: linear-gradient(90deg, var(--wb-blue-dark), var(--wb-blue));
+      color: #fff;
+      display:flex;
+      align-items:center;
+      overflow:hidden;
+      border-top: 2px solid rgba(255,255,255,.18);
+    }
+    .ticker .inner{
+      display:inline-block;
       white-space: nowrap;
-      overflow: hidden;
-    }
-    .marquee span {
-      display: inline-block;
       padding-left: 100%;
-      animation: scroll 20s linear infinite;
+      animation: scroll 26s linear infinite;
+      font-size: 20px;
+      font-weight: 850;
+      letter-spacing:.2px;
     }
-    @keyframes scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
+    @keyframes scroll{
+      0%{ transform: translateX(0); }
+      100%{ transform: translateX(-100%); }
+    }
+
+    /* “Signage” readability tweaks */
+    @media (max-width: 1100px){
+      .big{ font-size: 48px; }
+      .subtitle .line{ font-size: 18px; }
+      .wordmark{ font-size: 22px; }
+    }
+
+    /* If someone opens it on 1024x768, keep it usable */
+    @media (max-width: 1024px){
+      .grid, .comms{ gap: 14px; }
+      .wrap{ padding: 0 14px 70px 14px; }
+      .topbar{ padding: 14px; }
+      .span-4, .span-5, .span-6, .span-7, .span-8 { grid-column: span 12; }
+      .card{ padding: 16px; }
     }
   </style>
 </head>
 <body>
-  <header>Warburtons - Oven "A" Production Line</header>
 
-  <div class="stats">
-    <p>🍞 Loaves Baked Today: <strong id="loaves"></strong></p>
-    <p>🥖 Baguettes Packaged: <strong id="baguettes"></strong></p>
-    <p>🥐 Crumpets per Hour: <strong id="crumpets"></strong></p>
-    <p>🛠️ Last Safety Incident: <strong>Tobi</strong></p>
-    <div class="clock" id="clock"></div>
+  <div class="topbar">
+    <div class="brand">
+      <div class="wordmark" aria-label="Warburtons">
+        <!-- tiny wheat icon (inline SVG) -->
+        <svg class="wheat" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3c2.6 1.4 4.4 3.6 4.4 6.3 0 1.9-.9 3.5-2.2 4.9" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 3c-2.6 1.4-4.4 3.6-4.4 6.3 0 1.9.9 3.5 2.2 4.9" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <path d="M12 12v9" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8.2 8.1l-2.8-.8M8.6 10.5l-3.2.3M15.8 8.1l2.8-.8M15.4 10.5l3.2.3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Warburtons
+      </div>
+      <div class="subtitle">
+        <div class="line">Production Floor – Oven “A”</div>
+        <div class="tag">Bakers since 1876 • Digital Signage (demo)</div>
+      </div>
+    </div>
+
+    <div class="topmeta">
+      <div class="pill"><span class="dot" id="statusDot"></span><span id="lineStatus">Line: RUNNING</span></div>
+      <div class="pill">Shift: <span id="shiftName">Day</span> • <span id="shiftTime">06:00–14:00</span></div>
+      <div class="pill" id="clock">--:--</div>
+    </div>
   </div>
 
-  <div class="marquee"><span>⚠️ SAFETY FIRST: Gloves must be worn at all times | 🧼 Clean-down scheduled for 16:00 | 🚨 Daily machine test at 14:00 | 💡 Last safety incident recorded by: Tobi</span></div>
+  <div class="wrap">
+    <!-- Slide 1: KPIs -->
+    <div class="slide active" id="slideKpis">
+      <div class="grid">
+        <div class="card strong span-6">
+          <div class="label"><span>🍞 Loaves baked (today)</span><span class="mini" id="updated">Updated: --</span></div>
+          <div class="big"><span id="loaves">0</span><span class="unit">units</span></div>
+          <div class="sub">
+            <span class="mini">Target: <span id="loavesTarget">0</span></span>
+            <span class="mini">Rate: <span id="loavesRate">0</span>/min</span>
+            <span class="mini">Scrap: <span id="scrap">0</span>%</span>
+          </div>
+          <div class="progress" aria-label="Progress to target"><div class="bar" id="loavesBar"></div></div>
+          <div class="trend"><span>vs same time yesterday</span><span id="loavesTrend" class="up">+0%</span></div>
+        </div>
+
+        <div class="card span-6">
+          <div class="label"><span>🧯 Safety</span><span class="mini">Last incident</span></div>
+          <div class="big" style="color: var(--wb-blue);"><span id="incidentDays">0</span><span class="unit">days</span></div>
+          <div class="sub">
+            <span class="mini">Reported by: <span id="incidentBy">Tobi</span></span>
+            <span class="mini">Type: <span id="incidentType">Near miss</span></span>
+            <span class="mini">Area: <span id="incidentArea">Packing</span></span>
+          </div>
+          <div class="progress"><div class="bar" id="safetyBar" style="background: linear-gradient(90deg,var(--wb-blue),#5aa0ff)"></div></div>
+          <div class="trend"><span>Safety message</span><span><span class="mini">Gloves • Guards • Good housekeeping</span></span></div>
+        </div>
+
+        <div class="card span-4">
+          <div class="label"><span>🥖 Baguettes packaged</span><span class="mini">today</span></div>
+          <div class="big"><span id="baguettes">0</span></div>
+          <div class="sub">
+            <span class="mini">Target: <span id="bagTarget">0</span></span>
+            <span class="mini">Rejects: <span id="bagRejects">0</span></span>
+          </div>
+          <div class="progress"><div class="bar" id="bagBar"></div></div>
+        </div>
+
+        <div class="card span-4">
+          <div class="label"><span>🥐 Crumpets</span><span class="mini">per hour</span></div>
+          <div class="big"><span id="crumpets">0</span></div>
+          <div class="sub">
+            <span class="mini">Temp: <span id="temp">0</span>°C</span>
+            <span class="mini">Moisture: <span id="moisture">0</span>%</span>
+          </div>
+          <div class="progress"><div class="bar" id="crumpBar"></div></div>
+        </div>
+
+        <div class="card span-4">
+          <div class="label"><span>⚙️ OEE</span><span class="mini">live</span></div>
+          <div class="big"><span id="oee">0</span><span class="unit">%</span></div>
+          <div class="sub">
+            <span class="mini">Availability: <span id="avail">0</span>%</span>
+            <span class="mini">Performance: <span id="perf">0</span>%</span>
+            <span class="mini">Quality: <span id="qual">0</span>%</span>
+          </div>
+          <div class="trend"><span>Downtime (last 60m)</span><span id="downtime" class="down">0m</span></div>
+        </div>
+
+        <div class="card span-8">
+          <div class="label"><span>⏱️ Shift progress</span><span class="mini" id="shiftCountdown">--</span></div>
+          <div class="big" style="font-size:48px;"><span id="shiftPct">0</span><span class="unit">%</span></div>
+          <div class="progress" style="height:18px;"><div class="bar" id="shiftBar" style="background: linear-gradient(90deg,#22c55e,#86efac)"></div></div>
+          <div class="sub">
+            <span class="mini">Planned clean-down: <span id="cleandown">16:00</span></span>
+            <span class="mini">Next machine test: <span id="machinetest">14:00</span></span>
+            <span class="mini">Quality check: <span id="qc">Every 30 mins</span></span>
+          </div>
+        </div>
+
+        <div class="card span-4">
+          <div class="label"><span>🧪 Quality</span><span class="mini">last sample</span></div>
+          <div class="big" style="color:#16a34a;"><span id="qStatus">PASS</span></div>
+          <div class="sub">
+            <span class="mini">Weight: <span id="weight">0</span>g</span>
+            <span class="mini">Seal: <span id="seal">OK</span></span>
+            <span class="mini">Label: <span id="labelOk">OK</span></span>
+          </div>
+          <div class="trend"><span>Next sample due</span><span id="nextSample">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Safety + Comms -->
+    <div class="slide" id="slideComms">
+      <div class="comms">
+        <div class="card strong span-7">
+          <div class="label"><span>📣 Team comms</span><span class="mini">Today</span></div>
+          <div class="big" style="font-size:44px;color:var(--wb-orange-dark);">150 Years in the Baking</div>
+          <div class="list">
+            <div class="li">✅ <b>Start-of-shift:</b> line briefing completed • confirm allergen boards updated</div>
+            <div class="li">🧼 <b>Clean-down:</b> scheduled <span id="cd2">16:00</span> • tools returned to shadow boards</div>
+            <div class="li">🚨 <b>Machine test:</b> <span id="mt2">14:00</span> • E-stops and guards check</div>
+            <div class="li">📦 <b>Dispatch:</b> prioritise order <span id="priorityOrder">WB-4721</span> • bay 3</div>
+          </div>
+        </div>
+
+        <div class="card span-5">
+          <div class="label"><span>🧯 Safety focus</span><span class="mini">This week</span></div>
+          <div class="big" style="font-size:44px;color:var(--wb-blue);">Hands • Heat • Housekeeping</div>
+          <div class="list">
+            <div class="li">🧤 Gloves required on production floor</div>
+            <div class="li">🔥 Hot-zone awareness near ovens and conveyors</div>
+            <div class="li">🧹 Keep walkways clear • spill response within 2 mins</div>
+            <div class="li">🧰 LOTO for interventions • call engineering</div>
+          </div>
+        </div>
+
+        <div class="card span-12">
+          <div class="label"><span>📊 Quick summary</span><span class="mini">Auto-rotates every 20s</span></div>
+          <div class="sub" style="font-size:22px;">
+            <span class="mini">Line status: <span id="sumStatus">RUNNING</span></span>
+            <span class="mini">Loaves: <span id="sumLoaves">0</span></span>
+            <span class="mini">OEE: <span id="sumOee">0</span>%</span>
+            <span class="mini">Downtime: <span id="sumDown">0</span>m</span>
+            <span class="mini">Quality: <span id="sumQual">PASS</span></span>
+            <span class="mini">Last incident: <span id="sumIncident">0</span>d</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker" role="status" aria-live="polite">
+    <div class="inner" id="tickerText">
+      ⚠️ SAFETY FIRST: Gloves must be worn at all times • 🧼 Clean-down scheduled for 16:00 • 🚨 Daily machine test at 14:00 • 🧯 Last safety incident recorded by: Tobi
+    </div>
+  </div>
 
   <script>
-    // Simulated factory data
-    function generateFakeData() {
-      document.getElementById("loaves").textContent = 1200 + Math.floor(Math.random() * 300);
-      document.getElementById("baguettes").textContent = 300 + Math.floor(Math.random() * 150);
-      document.getElementById("crumpets").textContent = 85 + Math.floor(Math.random() * 20);
+    // -----------------------------
+    // Utilities
+    // -----------------------------
+    function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+    function pad2(n){ return String(n).padStart(2, "0"); }
+    function fmtTime(d){
+      return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+    }
+    function lerp(a,b,t){ return a + (b-a)*t; }
+
+    // Deterministic-ish RNG (seeded by date)
+    function mulberry32(a){
+      return function() {
+        let t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      }
+    }
+    function seedFromToday(){
+      const d = new Date();
+      const key = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+      // Simple hash
+      let h = 2166136261;
+      for (let i=0;i<key.length;i++){
+        h ^= key.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
     }
 
-    // Live clock
-    function updateClock() {
+    // Smooth number animation
+    function animateNumber(el, to, duration=450){
+      const from = Number(el.textContent.replace(/[^\d.-]/g,"")) || 0;
+      const start = performance.now();
+      function tick(now){
+        const t = clamp((now - start) / duration, 0, 1);
+        const val = Math.round(lerp(from, to, t));
+        el.textContent = val.toLocaleString();
+        if (t < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // -----------------------------
+    // “Shift” model (simple)
+    // -----------------------------
+    const shifts = [
+      { name:"Day", start:"06:00", end:"14:00" },
+      { name:"Late", start:"14:00", end:"22:00" },
+      { name:"Night", start:"22:00", end:"06:00" }
+    ];
+
+    function parseHHMM(hhmm){
+      const [h,m] = hhmm.split(":").map(Number);
+      return {h,m};
+    }
+
+    function inRange(now, start, end){
+      // Handles overnight shifts
+      const n = now.getHours()*60 + now.getMinutes();
+      const s = start.h*60 + start.m;
+      const e = end.h*60 + end.m;
+      if (s <= e) return n >= s && n < e;
+      return (n >= s) || (n < e);
+    }
+
+    function currentShift(now){
+      for (const sh of shifts){
+        const s = parseHHMM(sh.start);
+        const e = parseHHMM(sh.end);
+        if (inRange(now, s, e)) return { ...sh, s, e };
+      }
+      return { ...shifts[0], s: parseHHMM(shifts[0].start), e: parseHHMM(shifts[0].end) };
+    }
+
+    function shiftProgress(now, sh){
+      const n = now.getHours()*60 + now.getMinutes();
+      const s = sh.s.h*60 + sh.s.m;
+      const e = sh.e.h*60 + sh.e.m;
+
+      let total, done;
+      if (s <= e){
+        total = e - s;
+        done = n - s;
+      } else {
+        // overnight: total wraps
+        total = (24*60 - s) + e;
+        done = (n >= s) ? (n - s) : ((24*60 - s) + n);
+      }
+      done = clamp(done, 0, total);
+      return { pct: total ? (done/total)*100 : 0, remaining: total - done, total };
+    }
+
+    // -----------------------------
+    // Fake data model
+    // -----------------------------
+    const rng = mulberry32(seedFromToday());
+    const state = {
+      lineRunning: true,
+      loavesBase: 1100 + Math.floor(rng()*450),
+      bagBase: 260 + Math.floor(rng()*220),
+      crumpBase: 75 + Math.floor(rng()*35),
+      loavesTarget: 1700 + Math.floor(rng()*400),
+      bagTarget: 520 + Math.floor(rng()*200),
+      incidentDays: 8 + Math.floor(rng()*60),
+      incidentBy: "Tobi",
+      incidentType: (rng() > 0.55) ? "Near miss" : "First aid",
+      incidentArea: (rng() > 0.5) ? "Packing" : "Oven bay",
+      downtimeMins: Math.floor(rng()*9),
+      oee: 78 + Math.floor(rng()*15),
+      avail: 86 + Math.floor(rng()*10),
+      perf: 82 + Math.floor(rng()*10),
+      qual: 94 + Math.floor(rng()*5),
+      scrap: (0.8 + rng()*2.2),
+      bagRejects: Math.floor(rng()*18),
+      temp: 212 + Math.floor(rng()*10),
+      moisture: 34 + Math.floor(rng()*8),
+      weight: 792 + Math.floor(rng()*22),
+      seal: "OK",
+      labelOk: "OK",
+      qStatus: "PASS",
+      priorityOrder: `WB-${Math.floor(3000 + rng()*2500)}`
+    };
+
+    function maybeFlipLine(){
+      // Small chance of warning/downtime to make it feel “real”
+      const roll = rng();
+      if (roll < 0.06){
+        state.lineRunning = false;
+        state.downtimeMins = clamp(state.downtimeMins + 2 + Math.floor(rng()*6), 0, 60);
+      } else if (roll < 0.16){
+        state.lineRunning = true;
+        state.downtimeMins = clamp(state.downtimeMins - 1, 0, 60);
+      } else {
+        // drift a little
+        if (!state.lineRunning) state.downtimeMins = clamp(state.downtimeMins + 1, 0, 60);
+      }
+    }
+
+    function updateFakeNumbers(now){
+      const sh = currentShift(now);
+      const prog = shiftProgress(now, sh);
+
+      // Make “today” values grow with shift progress + small live jitter
+      const liveJitter = () => (rng() - 0.5);
+
+      const loaves = Math.round(state.loavesBase * (0.45 + prog.pct/100 * 0.75) + liveJitter()*25);
+      const bag = Math.round(state.bagBase * (0.35 + prog.pct/100 * 0.85) + liveJitter()*12);
+      const crump = Math.round(state.crumpBase + liveJitter()*8);
+
+      // Quality occasionally “warn”
+      const qRoll = rng();
+      if (qRoll < 0.05){
+        state.qStatus = "CHECK";
+        state.seal = (rng() > 0.5) ? "RECHECK" : "OK";
+        state.labelOk = (rng() > 0.5) ? "OK" : "RECHECK";
+      } else {
+        state.qStatus = "PASS";
+        state.seal = "OK";
+        state.labelOk = "OK";
+      }
+
+      // OEE components: ensure plausible
+      state.avail = clamp(state.avail + Math.round(liveJitter()*2), 75, 98);
+      state.perf  = clamp(state.perf  + Math.round(liveJitter()*2), 75, 98);
+      state.qual  = clamp(state.qual  + Math.round(liveJitter()*1), 88, 99);
+      state.oee = clamp(Math.round((state.avail * state.perf * state.qual) / 10000), 60, 95);
+
+      // Scrap drift
+      state.scrap = clamp(state.scrap + liveJitter()*0.15, 0.4, 4.9);
+
+      // Rates
+      const loavesRate = state.lineRunning ? clamp(18 + Math.round(liveJitter()*4), 10, 28) : 0;
+
+      return { sh, prog, loaves, bag, crump, loavesRate };
+    }
+
+    // -----------------------------
+    // DOM wiring
+    // -----------------------------
+    const el = (id) => document.getElementById(id);
+
+    function updateClock(){
       const now = new Date();
-      const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-      document.getElementById("clock").textContent = "Current Time: " + timeStr;
+      el("clock").textContent = `Time: ${fmtTime(now)}`;
+
+      const sh = currentShift(now);
+      el("shiftName").textContent = sh.name;
+      el("shiftTime").textContent = `${sh.start}–${sh.end}`;
+
+      const prog = shiftProgress(now, sh);
+      const hrs = Math.floor(prog.remaining / 60);
+      const mins = prog.remaining % 60;
+      el("shiftCountdown").textContent = `Remaining: ${hrs}h ${mins}m`;
     }
 
-    setInterval(updateClock, 1000);
-    updateClock();
-    generateFakeData();
+    function render(){
+      const now = new Date();
+      updateClock();
+
+      maybeFlipLine();
+      const { sh, prog, loaves, bag, crump, loavesRate } = updateFakeNumbers(now);
+
+      // Status
+      const running = state.lineRunning;
+      el("lineStatus").textContent = `Line: ${running ? "RUNNING" : "PAUSED"}`;
+      el("statusDot").className = "dot " + (running ? "" : "warn");
+
+      // Main numbers (animated)
+      animateNumber(el("loaves"), loaves);
+      animateNumber(el("baguettes"), bag);
+      animateNumber(el("crumpets"), crump);
+
+      // Targets
+      el("loavesTarget").textContent = state.loavesTarget.toLocaleString();
+      el("bagTarget").textContent = state.bagTarget.toLocaleString();
+      el("loavesRate").textContent = loavesRate.toLocaleString();
+
+      // Scrap
+      el("scrap").textContent = state.scrap.toFixed(1);
+
+      // Progress bars
+      const loafPct = clamp((loaves / state.loavesTarget) * 100, 0, 130);
+      el("loavesBar").style.width = `${clamp(loafPct, 0, 100)}%`;
+
+      const bagPct = clamp((bag / state.bagTarget) * 100, 0, 130);
+      el("bagBar").style.width = `${clamp(bagPct, 0, 100)}%`;
+
+      el("crumpBar").style.width = `${clamp((crump / (state.crumpBase + 20)) * 100, 0, 100)}%`;
+
+      // “Yesterday” trend (fake)
+      const trend = clamp(-4 + (rng()*12), -9, 14);
+      el("loavesTrend").textContent = `${trend >= 0 ? "+" : ""}${trend.toFixed(1)}%`;
+      el("loavesTrend").className = trend >= 0 ? "up" : "down";
+
+      // Safety
+      el("incidentDays").textContent = state.incidentDays.toLocaleString();
+      el("incidentBy").textContent = state.incidentBy;
+      el("incidentType").textContent = state.incidentType;
+      el("incidentArea").textContent = state.incidentArea;
+      el("safetyBar").style.width = `${clamp((state.incidentDays / 90) * 100, 0, 100)}%`;
+
+      // OEE / downtime
+      el("oee").textContent = state.oee.toLocaleString();
+      el("avail").textContent = state.avail.toLocaleString();
+      el("perf").textContent = state.perf.toLocaleString();
+      el("qual").textContent = state.qual.toLocaleString();
+      el("downtime").textContent = `${state.downtimeMins}m`;
+
+      // Packing rejects
+      el("bagRejects").textContent = state.bagRejects.toLocaleString();
+
+      // Process indicators
+      el("temp").textContent = state.temp.toLocaleString();
+      el("moisture").textContent = state.moisture.toLocaleString();
+
+      // Quality tile
+      el("qStatus").textContent = state.qStatus;
+      el("qStatus").style.color = (state.qStatus === "PASS") ? "#16a34a" : "#f59e0b";
+      el("weight").textContent = state.weight.toLocaleString();
+      el("seal").textContent = state.seal;
+      el("labelOk").textContent = state.labelOk;
+
+      // Next sample due (fake: next 30-min boundary)
+      const mins = now.getMinutes();
+      const next = new Date(now);
+      next.setMinutes(mins < 30 ? 30 : 60, 0, 0);
+      el("nextSample").textContent = fmtTime(next);
+
+      // Shift progress
+      el("shiftPct").textContent = Math.round(prog.pct).toLocaleString();
+      el("shiftBar").style.width = `${clamp(prog.pct, 0, 100)}%`;
+
+      // Updated timestamp
+      el("updated").textContent = `Updated: ${fmtTime(now)}`;
+
+      // Slide 2 values
+      el("cd2").textContent = el("cleandown").textContent;
+      el("mt2").textContent = el("machinetest").textContent;
+      el("priorityOrder").textContent = state.priorityOrder;
+
+      el("sumStatus").textContent = running ? "RUNNING" : "PAUSED";
+      el("sumLoaves").textContent = loaves.toLocaleString();
+      el("sumOee").textContent = state.oee.toLocaleString();
+      el("sumDown").textContent = state.downtimeMins.toLocaleString();
+      el("sumQual").textContent = state.qStatus;
+      el("sumIncident").textContent = state.incidentDays.toLocaleString();
+
+      // Ticker: keep it consistent with key times
+      el("tickerText").textContent =
+        `⚠️ SAFETY FIRST: Gloves must be worn at all times • 🧼 Clean-down scheduled for ${el("cleandown").textContent} • 🚨 Daily machine test at ${el("machinetest").textContent} • 🧯 Last safety incident recorded by: ${state.incidentBy}`;
+    }
+
+    // -----------------------------
+    // Slide rotation
+    // -----------------------------
+    const slides = ["slideKpis", "slideComms"];
+    let slideIdx = 0;
+
+    function rotateSlides(){
+      slides.forEach((id, i) => el(id).classList.toggle("active", i === slideIdx));
+      slideIdx = (slideIdx + 1) % slides.length;
+    }
+
+    // Initial paint + intervals
+    render();
+    setInterval(render, 5000);     // refresh the numbers every 5s
+    setInterval(rotateSlides, 20000); // rotate view every 20s
+    setInterval(updateClock, 1000); // live clock smoothness
   </script>
 </body>
 </html>
+
 
 
 
